@@ -1,4 +1,4 @@
-# DsMag-Updater
+# DsMag-Updater ESP
 A Minecraft mods updater
 
 PayPal <3: https://paypal.me/rmartingon
@@ -9,7 +9,7 @@ PayPal <3: https://paypal.me/rmartingon
 Apóyame por PayPal para seguir con los proyectos.
 
 -------------------------------------------------------------------------------------------------------------------------------------------
-# DsMag-Updater
+# DsMag-Updater ENG
 A Minecraft mods updater
 
 PayPal <3: https://paypal.me/rmartingon
