@@ -1,0 +1,102 @@
+@echo off
+:: Configuración de la URL y la ubicación de descarga
+:: URL and download's destination configuration 
+set "URL=https://myserver/docs/version.txt"
+set "DESTINO=%UserProfile%\AppData\Roaming\.minecraft"
+set "ARCHIVO_VERSION_LOCAL=%DESTINO%\version.txt"
+set "ARCHIVO_VERSION_TEMP=%TEMP%\version.txt"
+set "URL_ARCHIVO=https://myserver/docs/mods.zip"
+set "ARCHIVO_DESTINO=%DESTINO%\mods.zip"
+set "Carpeta_mods=%DESTINO%\modsfolder"
+
+:: Crear la carpeta de destino si no existe
+:: Create destination folder if doesn't exist.
+if not exist "%DESTINO%" (
+    mkdir "%DESTINO%"
+)
+
+:: Descargar el archivo version.txt desde el servidor y guardarlo temporalmente.
+:: Download the version.txt from the server and save it temporally.
+curl -s -o "%ARCHIVO_VERSION_TEMP%" "%URL%"
+echo Buscando actualizaciones... Looking for updates...
+timeout 3 /nobreak >nul
+
+:: Comparar versiones
+:: Compare versions
+fc /b %ARCHIVO_VERSION_LOCAL% %ARCHIVO_VERSION_TEMP% >nul
+
+:: Comprobar si existe el archivo de version en .minecraft.
+:: Check for the version file in .minecraft.
+if %ERRORLEVEL% equ 2 goto noinfo
+
+if %ERRORLEVEL% LSS 2 (
+echo Version actual - Actual version
+more %ARCHIVO_VERSION_LOCAL% 
+echo Disponible - Available
+more %ARCHIVO_VERSION_TEMP% 
+timeout 3 /nobreak >nul
+if %ERRORLEVEL% equ 0 goto noupdate
+if %ERRORLEVEL% equ 1 goto update
+)
+
+:: No actualizar
+:: No update
+:noupdate
+cls
+echo No hay cambios en la version. No changes in the version.
+choice /c sn /n /m "Deseas actualizar aunque no haya cambios en la version? Do you want to update, even with no changes in the version? SI/YES[S] NO[N]"
+if %ERRORLEVEL% equ 1 goto update
+if %ERRORLEVEL% equ 2 goto delete
+
+:: Borrar version temporal si no hay que actualizar.
+:: Delete temporal version if there are no updates.
+:delete
+del "%ARCHIVO_VERSION_TEMP%"
+goto fin
+
+:: Descargar el archivo si se detectaron cambios o no existía un archivo de versión local.
+:: Download the file if changes detected or there wasn't a local version file.
+:noinfo
+echo No se encontro archivo de version. Descargando nueva version. Version file not found. Downloading new version.
+curl -o "%ARCHIVO_DESTINO%" "%URL_ARCHIVO%" >nul
+goto :change
+
+:: Actualizar el archivo de versión local con la nueva versión
+:: Update the local version file with the new version.
+:change
+move /Y "%ARCHIVO_VERSION_TEMP%" "%ARCHIVO_VERSION_LOCAL%" >nul
+goto :fin
+
+:: Actualizar.
+:: Update.
+:update
+cls
+echo Actualizando... Por favor, espere. Updating... Please, wait.
+del /f %Carpeta_mods%\*.jar >nul
+echo Borrando mods existentes... Deleting existent mods...
+curl -s -o "%ARCHIVO_DESTINO%" "%URL_ARCHIVO%" >nul
+timeout 1 /nobreak >nul
+goto :unzip
+
+:: Extraer mods del .zip
+:: Unzip mods from the .zip
+:unzip
+tar -xf %ARCHIVO_DESTINO% -C %Carpeta_mods% >nul
+echo Extrayendo nuevos mods...
+timeout 2 /nobreak >nul
+goto :update_paso2
+
+:: Borrar .zip
+:: Delete .zip
+:update_paso2
+del %ARCHIVO_DESTINO% >nul
+echo Actualizando version... Updating version...
+timeout 3 /nobreak >nul
+goto :change
+
+::Fin End
+:fin
+cls
+echo Proceso terminado. Se cerrara en 5 segundos - Proccess finished! Closing in 5 seconds. GRACIAS POR USAR DSMAG-UPDATER - THANKS FOR USING DSMAG-UPDATER 
+start "" http://paypal.me/rmartingon
+timeout /t 5 
